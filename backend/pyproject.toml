@@ -1,0 +1,61 @@
+[project]
+name = "testforge-backend"
+version = "0.1.0"
+description = "TestForge — AI 驱动的全链路自动化测试平台（后端）"
+requires-python = ">=3.11"
+# 依赖的唯一事实来源是 requirements.txt；此处不重复声明，避免两处漂移。
+dynamic = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-q --strict-markers"
+markers = [
+    "unit: 纯逻辑单元测试，无外部依赖",
+    "agents: LangGraph 图与节点测试（默认走 LLM_MOCK）",
+    "api: 需要 FastAPI 的接口测试",
+    "e2e: 端到端全链路测试，需要真实数据库/模型",
+    "slow: 耗时测试",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:celery.*",
+    "ignore::DeprecationWarning:kombu.*",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "RUF"]
+ignore = [
+    "B008",     # FastAPI 的 Depends() 默认值风格
+    "RUF001",   # 中文全角标点：项目注释是中文，属正常用法
+    "RUF002",   # 同上（docstring）
+    "RUF003",   # 同上（注释）
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "E501"]
+
+[tool.ruff.lint.isort]
+# 项目里有 alembic/ 目录（迁移脚本），ruff 会把 `import alembic` 误判为
+# 第一方模块。显式声明它是第三方，保证 import 排序与真实语义一致。
+known-third-party = ["alembic"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/main.py", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError"]

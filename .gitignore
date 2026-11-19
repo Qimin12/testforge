@@ -162,6 +162,39 @@ venv.bak/
 # Conda environments
 conda-meta/
 
+# ---------------------------------------------------------------------------
+# TestForge 本地运行产物（不要提交）
+# ---------------------------------------------------------------------------
+# 开发期 SQLite 库与 LangGraph 检查点
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite3
+
+# 覆盖率与测试缓存
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# uv / pip 缓存
+.uvcache/
+uv.lock.tmp
+
+# 前端 Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/.env.local
+frontend/next-env.d.ts
+
+# TypeScript 增量编译缓存
+*.tsbuildinfo
+
+# TypeScript 增量编译缓存
+*.tsbuildinfo
+
 # Spyder project settings
 .spyderproject
 .spyproject

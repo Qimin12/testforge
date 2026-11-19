@@ -1,0 +1,96 @@
+"""接口层数据契约（Pydantic v2）。"""
+
+from app.schemas.auth import (
+    ApiKeyCreate,
+    ApiKeyCreated,
+    ApiKeyOut,
+    LoginRequest,
+    RefreshRequest,
+    RegisterRequest,
+    TokenPair,
+    UserOut,
+    UserUpdate,
+)
+from app.schemas.case import (
+    AssertionIn,
+    CaseBulkCreate,
+    CaseCreate,
+    CaseOut,
+    CasePage,
+    CaseUpdate,
+)
+from app.schemas.ci import (
+    CIGate,
+    CIProjectOut,
+    CIRunRequest,
+    CIRunResponse,
+    UsageOut,
+)
+from app.schemas.coverage import CoverageIn, CoverageOut
+from app.schemas.execution import (
+    DefectOut,
+    DefectPage,
+    ExecutionDetail,
+    ExecutionOut,
+    ExecutionPage,
+    ResultOut,
+    RunProjectRequest,
+)
+from app.schemas.graph import (
+    GraphResumeRequest,
+    GraphRunRequest,
+    GraphRunResponse,
+    ReviewDecision,
+)
+from app.schemas.project import (
+    OpenAPIImportRequest,
+    OpenAPIImportResult,
+    OpenAPIOperation,
+    ProjectCreate,
+    ProjectOut,
+    ProjectPage,
+    ProjectUpdate,
+)
+
+__all__ = [
+    "ApiKeyCreate",
+    "ApiKeyCreated",
+    "ApiKeyOut",
+    "AssertionIn",
+    "CIGate",
+    "CIProjectOut",
+    "CIRunRequest",
+    "CIRunResponse",
+    "CaseBulkCreate",
+    "CaseCreate",
+    "CaseOut",
+    "CasePage",
+    "CaseUpdate",
+    "CoverageIn",
+    "CoverageOut",
+    "DefectOut",
+    "DefectPage",
+    "ExecutionDetail",
+    "ExecutionOut",
+    "ExecutionPage",
+    "GraphResumeRequest",
+    "GraphRunRequest",
+    "GraphRunResponse",
+    "LoginRequest",
+    "OpenAPIImportRequest",
+    "OpenAPIImportResult",
+    "OpenAPIOperation",
+    "ProjectCreate",
+    "ProjectOut",
+    "ProjectPage",
+    "ProjectUpdate",
+    "RefreshRequest",
+    "RegisterRequest",
+    "ResultOut",
+    "ReviewDecision",
+    "RunProjectRequest",
+    "TokenPair",
+    "UsageOut",
+    "UserOut",
+    "UserUpdate",
+]
