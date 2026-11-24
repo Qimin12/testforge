@@ -95,6 +95,8 @@ async def run_case(client: httpx.AsyncClient, case: dict[str, Any]) -> dict[str,
     path = case.get("path") or "/"
     expected_status = int(case.get("expected_status") or 200)
     assertions = case.get("assertions") or []
+    params = dict(case.get("params") or {})
+    path = _resolve_path_params(path, params)
 
     started = time.perf_counter()
     try:
@@ -102,7 +104,7 @@ async def run_case(client: httpx.AsyncClient, case: dict[str, Any]) -> dict[str,
             method,
             path,
             headers=case.get("headers") or None,
-            params=case.get("params") or None,
+            params=params or None,
             json=case.get("body"),
         )
     except httpx.HTTPError as exc:
@@ -156,6 +158,25 @@ async def run_case(client: httpx.AsyncClient, case: dict[str, Any]) -> dict[str,
     }
 
 
+def _resolve_path_params(path: str, params: dict[str, Any]) -> str:
+    """把 path 里的 {param} 占位符替换为 params 中同名参数的值。
+
+    AI 生成的用例常写成 path="/users/{user_id}" + params={"user_id": 1}，
+    若不替换直接请求，会命中字面量路径 /users/{user_id} 导致 422。
+    已被替换的键从 params 中移除，剩余键继续作为 query 参数传递。
+    """
+    import re
+
+    resolved = path
+    for name in re.findall(r"\{(\w+)\}", path):
+        value = params.get(name)
+        if value is None:
+            continue
+        resolved = resolved.replace("{" + name + "}", str(value))
+        params.pop(name, None)
+    return resolved
+
+
 def _check_assertion(assertion: dict[str, Any], response: httpx.Response) -> dict[str, Any]:
     mode = assertion.get("mode") or "status_code"
     target = assertion.get("target") or ""
@@ -168,8 +189,9 @@ def _check_assertion(assertion: dict[str, Any], response: httpx.Response) -> dic
             actual = response.status_code
             passed = _loose_equal(actual, expected)
         elif mode == "json_path":
-            actual = _resolve_json_path(response.json(), target)
-            passed = _loose_equal(actual, expected)
+            value = _resolve_json_path(response.json(), target)
+            actual = value
+            passed = _loose_equal(value, expected) or _type_equal(value, expected)
         elif mode == "header":
             actual = response.headers.get(target)
             passed = _loose_equal(actual, expected)
@@ -194,11 +216,16 @@ def _check_assertion(assertion: dict[str, Any], response: httpx.Response) -> dic
 
 
 def _resolve_json_path(data: Any, path: str) -> Any:
-    """支持 ``data.items.0.id`` 这种点号路径。"""
+    """支持 ``data.items.0.id`` 点号路径，也兼容 ``$.detail`` 这类 JSONPath 写法。"""
     if not path:
         return data
+    clean = path.strip()
+    if clean.startswith("$"):
+        clean = clean[1:].lstrip(".")
+    if not clean:
+        return data
     current = data
-    for part in path.split("."):
+    for part in clean.split("."):
         if isinstance(current, list):
             current = current[int(part)]
         elif isinstance(current, dict):
@@ -206,6 +233,27 @@ def _resolve_json_path(data: Any, path: str) -> Any:
         else:
             raise KeyError(f"路径 {path} 在 {part} 处无法继续")
     return current
+
+
+def _type_equal(actual: Any, expected: Any) -> bool:
+    """支持断言期望为 "object"/"integer" 这类类型名时的类型比对。"""
+    if not isinstance(expected, str):
+        return False
+    name = expected.strip().lower()
+    types: dict[str, type | tuple[type, ...]] = {
+        "object": dict,
+        "array": list,
+        "string": str,
+        "integer": int,
+        "number": (int, float),
+        "boolean": bool,
+        "null": type(None),
+        "any": object,
+    }
+    typ = types.get(name)
+    if typ is None:
+        return False
+    return isinstance(actual, typ)
 
 
 def _loose_equal(actual: Any, expected: Any) -> bool:
